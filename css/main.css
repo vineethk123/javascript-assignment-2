@@ -31,7 +31,7 @@ body {
   overflow: auto;
   /* For table as a flex-box item */
   flex-grow: 1;
-  margin-right: 5px;
+  margin-right: 0.3vw;
 }
 
 .menu {
@@ -47,8 +47,8 @@ body {
 .card {
   /* Add shadows to create the "card" effect */
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-  margin: 15px;
-  padding-left: 15px;
+  margin: 1vw;
+  padding-left: 1vw;
   transition: 0.3s;
 }
 
@@ -61,12 +61,17 @@ body {
 }
 
 .table {
-  height: 7.3vw;
+  height: 6.5vw;
 }
 
 .menu-item {
   height: 8vw;
 }
+
 .card-title {
   font-size: 1.4vw;
+}
+
+.card-content {
+  font-size: 1vw;
 }
