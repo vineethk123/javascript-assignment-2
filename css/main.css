@@ -23,23 +23,26 @@ body {
   background-color: black;
 }
 
-.tables {
+.heading {
+  align-self: center;
+}
+
+.common-flex-style {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  flex-wrap: none;
   background-color: white;
   overflow: auto;
+}
+
+.tables {
   /* For table as a flex-box item */
   flex-grow: 1;
   margin-right: 0.3vw;
 }
 
 .menu {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  background-color: white;
-  overflow: auto;
   /* For menu as a flex-box item */
   flex-grow: 3;
 }
@@ -56,10 +59,6 @@ body {
   box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }
 
-.heading {
-  align-self: center;
-}
-
 .table {
   height: 6.5vw;
 }
@@ -74,4 +73,14 @@ body {
 
 .card-content {
   font-size: 1vw;
+}
+
+.search-bar {
+  border: none;
+  padding: 1vw;
+}
+
+input:focus {
+  outline: none;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
 }

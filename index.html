@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Title</title>
+    <title>Zemoso Restaurant</title>
     <link
       href="https://fonts.googleapis.com/css?family=Roboto"
       rel="stylesheet"
@@ -12,57 +12,67 @@
   </head>
   <body>
     <div class="site-content">
-      <div class="tables">
+      <div id="all-tables-div" class="tables common-flex-style">
         <h3 class="heading">Tables</h3>
-        <div id="table-search-bar" class="search-bar card"></div>
+        <input
+          type="search"
+          id="table-search-bar"
+          placeholder="Search table"
+          class="search-bar card"
+          onkeyup="filterContent('all-tables-div')"
+        />
         <div id="table-1" class="card table">
-          <p name="table-name" class="card-title">Table - 1</p>
+          <p class="card-title">Table - 1</p>
           <p class="card-content">
             Rs.<span name="total">0</span> | Total items:
             <span name="item-count">0</span>
           </p>
         </div>
         <div id="table-2" class="card table">
-          <p name="table-name" class="card-title">Table - 2</p>
+          <p class="card-title">Table - 2</p>
           <p class="card-content">
             Rs.<span name="total">0</span> | Total items:
             <span name="item-count">0</span>
           </p>
         </div>
         <div id="table-3" class="card table">
-          <p name="table-name" class="card-title">Table - 3</p>
+          <p class="card-title">Table - 3</p>
           <p class="card-content">
             Rs.<span name="total">0</span> | Total items:
             <span name="item-count">0</span>
           </p>
         </div>
       </div>
-      <div class="menu">
+      <div id="menu-div" class="menu common-flex-style">
         <h3 class="heading">Menu</h3>
-        <div id="menu-search-bar" class="search-bar card"></div>
-        <div id="item-1" class="card menu-item">
-          <p name="item-name" class="card-title">
-            Crustry Garlic Focaccia with Melted Cheese
-          </p>
+        <!--TO DO make input similiar to above one-->
+        <input
+          type="search"
+          id="menu-search-bar"
+          placeholder="Search menu.. by course, by food"
+          class="search-bar card"
+          onkeyup="filterContent('menu-div')"
+        />
+        <div id="item-1" class="card menu-item" data-course-type="main course">
+          <p class="card-title">Crustry Garlic Focaccia with Melted Cheese</p>
           <p name="price" class="card-content">105.00</p>
         </div>
-        <div id="item-2" class="card menu-item">
-          <p name="item-name" class="card-title">French Fries</p>
+        <div id="item-2" class="card menu-item" data-course-type="appetizers">
+          <p class="card-title">French Fries</p>
           <p name="price" class="card-content">105.00</p>
         </div>
-        <div id="item-3" class="card menu-item">
-          <p name="item-name" class="card-title">
+        <div id="item-3" class="card menu-item" data-course-type="main course">
+          <p class="card-title">
             Home Country Fries with Herbs & Chilli Flakes
           </p>
           <p name="price" class="card-content">105.00</p>
         </div>
-        <div id="item-4" class="card menu-item">
-          <p name="item-name" class="card-title">
-            French Fries with Cheese & Jalapenos
-          </p>
+        <div id="item-4" class="card menu-item" data-course-type="appetizers">
+          <p class="card-title">French Fries with Cheese & Jalapenos</p>
           <p name="price" class="card-content">135.00</p>
         </div>
       </div>
     </div>
+    <script src="js/index.js"></script>
   </body>
 </html>
