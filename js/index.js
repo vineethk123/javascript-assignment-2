@@ -6,7 +6,6 @@ const tableDivs = tableContainerDiv.querySelectorAll("div");
 // Add event listeners to table and item div elements
 for (const div of itemDivs) {
   div.addEventListener("dragstart", dragStart);
-  div.addEventListener("dragend", dragEnd);
 }
 
 for (const div of tableDivs) {
@@ -14,28 +13,51 @@ for (const div of tableDivs) {
   div.addEventListener("drop", dragDrop);
 }
 
+/**
+ * Triggered when one starts dragging a draggable element.
+ * @param {Object} dragEvent
+ */
 function dragStart(dragEvent) {
-  console.log("In dragStart");
-}
-
-function dragEnd(dragEvent) {
-  console.log("In dragEnd");
-}
-
-function dragOver(event) {
-  // Necessary to trigger 'drop' event
-  event.preventDefault();
-}
-
-function dragDrop(event) {
-  console.log("in drag drop");
+  let draggedItemElement = dragEvent.srcElement;
+  let draggedItemPrice = draggedItemElement.querySelector("p.card-content")
+    .innerText;
+  // dataTransfer property is used to hold the data that is being dragged.
+  // setData() is used to store the data in the dataTranfer object during drag operation.
+  dragEvent.dataTransfer.setData("text/plain", draggedItemPrice);
 }
 
 /**
- * Takes parent div id as parameter, fetches the search keyword &
+ * Triggered when the dragged object is moved over an element that has 'dragover' event listener attached.
+ * @param {Object} dragEvent
+ */
+function dragOver(dragEvent) {
+  // Prevent default behaviour to trigger 'drop' event
+  dragEvent.preventDefault();
+}
+
+/**
+ * Triggered when the dragged element is dropped on an element with 'drop' event listener attached.
+ * Increments the item-count by 1 and adds the dragged item's price to total price of the target table.
+ * @param {Object} draggableEvent
+ */
+function dragDrop(dragEvent) {
+  console.log(typeof dragEvent);
+  let priceSpanElement = this.querySelector("span[data-name='price']");
+  let itemCountSpanElement = this.querySelector("span[data-name='item-count']");
+  let draggedItemPrice = parseInt(dragEvent.dataTransfer.getData("text/plain"));
+  let newPrice = parseInt(priceSpanElement.innerText) + draggedItemPrice;
+  priceSpanElement.innerText = newPrice;
+  let tableItemCount = parseInt(itemCountSpanElement.innerText);
+  itemCountSpanElement.innerText = tableItemCount + 1;
+}
+
+/**
+ * Takes a container div id as parameter, fetches the search keyword &
  * filters the child divs(the contents) accordingly.
+ * @param {string} containerDivId
  */
 function filterContent(containerDivId) {
+  console.log(typeof containerDivId);
   let containerDiv = document.getElementById(containerDivId);
   let searchKeyword = containerDiv.querySelector("input").value.toLowerCase();
   let childDivs = containerDiv.querySelectorAll("div");
