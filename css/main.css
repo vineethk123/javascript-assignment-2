@@ -65,6 +65,7 @@ body {
 
 .menu-item {
   height: 8vw;
+  cursor: pointer;
 }
 
 .card-title {
