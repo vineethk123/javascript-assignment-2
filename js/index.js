@@ -2,6 +2,8 @@ const menuContainerDiv = document.getElementById("menu-div");
 const itemDivs = menuContainerDiv.querySelectorAll("div");
 const tableContainerDiv = document.getElementById("all-tables-div");
 const tableDivs = tableContainerDiv.querySelectorAll("div");
+let modalElement = document.getElementsByClassName("modal")[0];
+let currentTablediv; // div element for which the pop-up is being displayed
 
 // Add event listeners to table and item div elements
 for (const div of itemDivs) {
@@ -41,11 +43,12 @@ function dragOver(dragEvent) {
  * @param {Object} draggableEvent
  */
 function dragDrop(dragEvent) {
-  console.log(typeof dragEvent);
   let priceSpanElement = this.querySelector("span[data-name='price']");
   let itemCountSpanElement = this.querySelector("span[data-name='item-count']");
-  let draggedItemPrice = parseInt(dragEvent.dataTransfer.getData("text/plain"));
-  let newPrice = parseInt(priceSpanElement.innerText) + draggedItemPrice;
+  let draggedItemPrice = parseFloat(
+    dragEvent.dataTransfer.getData("text/plain")
+  );
+  let newPrice = parseFloat(priceSpanElement.innerText) + draggedItemPrice;
   priceSpanElement.innerText = newPrice;
   let tableItemCount = parseInt(itemCountSpanElement.innerText);
   itemCountSpanElement.innerText = tableItemCount + 1;
@@ -57,7 +60,6 @@ function dragDrop(dragEvent) {
  * @param {string} containerDivId
  */
 function filterContent(containerDivId) {
-  console.log(typeof containerDivId);
   let containerDiv = document.getElementById(containerDivId);
   let searchKeyword = containerDiv.querySelector("input").value.toLowerCase();
   let childDivs = containerDiv.querySelectorAll("div");
@@ -78,3 +80,31 @@ function filterContent(containerDivId) {
     }
   });
 }
+
+function showModal(tableId) {
+  currentTablediv = document.getElementById(tableId);
+  currentTablediv.style.backgroundColor = "yellow";
+  let tableTitle = currentTablediv.querySelector(".card-title").innerText;
+  modalElement = document.getElementsByClassName("modal")[0];
+  modalElement.querySelector("#table-name-for-modal").innerText = tableTitle;
+  modalElement.style.display = "block";
+}
+
+function hideModal() {
+  modalElement.style.display = "none";
+  currentTablediv.style.backgroundColor = "white";
+  currentTablediv = undefined;
+}
+
+function closeTableSession() {
+  clearCurrentTable();
+  hideModal();
+}
+
+function clearCurrentTable() {}
+
+window.onclick = function(event) {
+  if (event.target == modalElement) {
+    hideModal();
+  }
+};
