@@ -3,7 +3,6 @@ const itemDivs = menuContainerDiv.querySelectorAll("div");
 const tableContainerDiv = document.getElementById("all-tables-div");
 const tableDivs = tableContainerDiv.querySelectorAll("div");
 let modalElement = document.getElementsByClassName("modal")[0];
-let currentTablediv; // div element for which the pop-up is being displayed
 let allTableOrders = {};
 
 // Add event listeners to table and item div elements
@@ -134,7 +133,7 @@ function filterContent(containerDivId) {
 }
 
 function showModal(tableId) {
-  currentTablediv = document.getElementById(tableId);
+  let currentTablediv = document.getElementById(tableId);
   currentTablediv.style.backgroundColor = "yellow";
   let tableTitle = currentTablediv.querySelector(".card-title").innerText;
   modalElement = document.getElementsByClassName("modal")[0];
@@ -143,9 +142,16 @@ function showModal(tableId) {
 }
 
 function hideModal() {
+  let currentTablediv = null;
   modalElement.style.display = "none";
+  let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
+  for (let tableDiv of tableDivs) {
+    let tableDivTitle = tableDiv.querySelector(".card-title").innerText;
+    if (tableDivTitle === tableName) {
+      currentTablediv = tableDiv;
+    }
+  }
   currentTablediv.style.backgroundColor = "white";
-  currentTablediv = undefined;
 }
 
 function closeTableSession() {
