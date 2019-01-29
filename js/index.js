@@ -4,8 +4,9 @@ const tableContainerDiv = document.getElementById("all-tables-div");
 const tableDivs = tableContainerDiv.querySelectorAll("div");
 let modalElement = document.getElementsByClassName("modal")[0];
 let allTableOrders = {};
+let modalBodyElement = document.getElementById("modal-body");
 
-// Add event listeners to table and item div elements
+// Add event listeners related to dragging to table and item div elements
 for (const div of itemDivs) {
   div.addEventListener("dragstart", dragStart);
 }
@@ -13,6 +14,99 @@ for (const div of itemDivs) {
 for (const div of tableDivs) {
   div.addEventListener("dragover", dragOver);
   div.addEventListener("drop", dragDrop);
+}
+
+/**
+ * Has information related to orders of a particular table and methods that operate on them.
+ */
+class Table {
+  constructor() {
+    this.itemInformationList = [];
+  }
+
+  /**
+   * Returns itemInformationList.
+   */
+  getItemInformationList() {
+    return this.itemInformationList.slice();
+  }
+
+  /**
+   * Take name, price and count of an item and add it to itemInformationList.
+   * @param {string} itemName
+   * @param {number} itemPrice
+   * @param {number} itemCount
+   */
+  addItemInformation(itemName, itemPrice, itemCount) {
+    let itemInformation = {
+      name: itemName,
+      price: itemPrice,
+      count: itemCount
+    };
+    this.itemInformationList.push(itemInformation);
+  }
+
+  /**
+   * Check if an item exists in itemInformationList with name 'itemName' and return a boolean.
+   * @param {string} itemName
+   */
+  getItemIndexByName(itemName) {
+    let itemInformationListIterator = this.itemInformationList.entries();
+    for (let entry of itemInformationListIterator) {
+      if (entry[1].name === itemName) {
+        return entry[0];
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Delete an item from itemInformationList by it's name.
+   * @param {string} itemName
+   */
+  deleteItemByName(itemName) {
+    let itemIndex = this.getItemIndexByName(itemName);
+    if (itemIndex !== -1) {
+      this.itemInformationList.splice(itemIndex, 1);
+    } else {
+      console.log(
+        "Item by name '" +
+          itemName +
+          "' doesn't exist. So, it can't be deleted."
+      );
+    }
+  }
+
+  /**
+   * Increment the count of an item named 'itemName'.
+   * @param {string} itemName
+   */
+  incrementItemCountByName(itemName) {
+    let itemIndex = this.getItemIndexByName(itemName);
+    this.itemInformationList[itemIndex].count += 1;
+  }
+
+  /**
+   * Return  total bill for the table.
+   */
+  getTotalBill() {
+    let totalBill = 0;
+    for (let itemInformation of this.itemInformationList) {
+      totalBill += itemInformation.price * itemInformation.count;
+    }
+    return totalBill;
+  }
+
+  /**
+   * Return the count of all items ordered from the table.
+   */
+  getAllItemCount() {
+    let allItemCount = 0;
+    for (let itemInformation of this.itemInformationList) {
+      allItemCount += itemInformation.count;
+    }
+    return allItemCount;
+  }
 }
 
 /**
@@ -60,18 +154,22 @@ function dragDrop(dragEvent) {
   // If a new item is added to an existing table make an entry for it.
   // If an existing item is ordered in an existing table increment the count of that item for that table by 1.
   if (typeof allTableOrders[droppedTableId] === "undefined") {
-    allTableOrders[droppedTableId] = {};
-    allTableOrders[droppedTableId][draggedItemName] = {};
-    allTableOrders[droppedTableId][draggedItemName]["price"] = draggedItemPrice;
-    allTableOrders[droppedTableId][draggedItemName]["count"] = 1;
+    allTableOrders[droppedTableId] = new Table();
+    allTableOrders[droppedTableId].addItemInformation(
+      draggedItemName,
+      draggedItemPrice,
+      1
+    );
   } else if (
-    typeof allTableOrders[droppedTableId][draggedItemName] === "undefined"
+    allTableOrders[droppedTableId].getItemIndexByName(draggedItemName) === -1
   ) {
-    allTableOrders[droppedTableId][draggedItemName] = {};
-    allTableOrders[droppedTableId][draggedItemName]["price"] = draggedItemPrice;
-    allTableOrders[droppedTableId][draggedItemName]["count"] = 1;
+    allTableOrders[droppedTableId].addItemInformation(
+      draggedItemName,
+      draggedItemPrice,
+      1
+    );
   } else {
-    allTableOrders[droppedTableId][draggedItemName]["count"] += 1;
+    allTableOrders[droppedTableId].incrementItemCountByName(draggedItemName);
   }
   renderTableContent(this);
 }
@@ -82,9 +180,6 @@ function dragDrop(dragEvent) {
  * @param {object} dragEvent
  */
 function renderTableContent(targetTableElement) {
-  console.log("in rendertablecontent");
-  let tableBill = 0,
-    tableItemCount = 0;
   let targetTableId = targetTableElement.getAttribute("id");
   let priceSpanElement = targetTableElement.querySelector(
     "span[data-name='price']"
@@ -92,17 +187,10 @@ function renderTableContent(targetTableElement) {
   let itemCountSpanElement = targetTableElement.querySelector(
     "span[data-name='item-count']"
   );
-  console.log("Elements: ", priceSpanElement, itemCountSpanElement);
-  for (let item in allTableOrders[targetTableId]) {
-    console.log("item: ", allTableOrders[targetTableId][item]);
-    tableBill +=
-      allTableOrders[targetTableId][item].price *
-      allTableOrders[targetTableId][item].count;
-    tableItemCount += allTableOrders[targetTableId][item].count;
-  }
-  console.log("Bill: ", tableBill, "\nitemcount: ", tableItemCount);
-  priceSpanElement.innerText = tableBill;
-  itemCountSpanElement.innerText = tableItemCount;
+  priceSpanElement.innerText = allTableOrders[targetTableId].getTotalBill();
+  itemCountSpanElement.innerText = allTableOrders[
+    targetTableId
+  ].getAllItemCount();
 }
 
 /**
@@ -132,26 +220,67 @@ function filterContent(containerDivId) {
   });
 }
 
+/**
+ * Turn the clicked table div yellow and show the pop-up.
+ * @param {string} tableId
+ */
 function showModal(tableId) {
-  let currentTablediv = document.getElementById(tableId);
-  currentTablediv.style.backgroundColor = "yellow";
-  let tableTitle = currentTablediv.querySelector(".card-title").innerText;
+  // Make the background color of clicked table-div yellow
+  let currentTableDiv = document.getElementById(tableId);
+  currentTableDiv.style.backgroundColor = "yellow";
+  // Get the name of the table clicked to display on pop-up header.
+  let tableTitle = currentTableDiv.querySelector(".card-title").innerText;
   modalElement = document.getElementsByClassName("modal")[0];
   modalElement.querySelector("#table-name-for-modal").innerText = tableTitle;
+  // Fill the modal items' information ordered by the table.
+  populateModal(tableId);
+  // Make the modal visible
   modalElement.style.display = "block";
 }
 
+/**
+ * Populate the modal with order information related to the table having id tableId.
+ * @param {string} tableId
+ */
+function populateModal(tableId) {
+  let serialNumber = 0;
+  for (let itemName in allTableOrders[tableId]) {
+    serialNumber++;
+    modalBodyElement.appendChild(createNode("span", serialNumber, ["col-1"]));
+    modalBodyElement.appendChild(createNode("span", itemName, ["col-2"]));
+    modalBodyElement.appendChild(
+      createNode("span", allTableOrders[tableId][item].price, ["col-3"])
+    );
+    modalBodyElement.appendChild(createNode("span", "placeholder", ["col-4"]));
+    let binSpanElement = createNode("span", "", ["col-5"]);
+    binSpanElement.appendChild(createNode("img", "", ["delete-icon"]));
+  }
+}
+
+/**
+ * Create an HTML element with the specified innertext and CSS classes and return it.
+ * @param {string} elementName
+ * @param {string} innerText
+ * @param {Array} classNames
+ */
+function createNode(elementName, innerText, classNames) {
+  // To-Do: create nodes.
+}
+
+/**
+ * Hide the modal and turn the clicked table div's background color to white
+ */
 function hideModal() {
-  let currentTablediv = null;
+  let currentTableDiv = null;
   modalElement.style.display = "none";
   let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
   for (let tableDiv of tableDivs) {
     let tableDivTitle = tableDiv.querySelector(".card-title").innerText;
     if (tableDivTitle === tableName) {
-      currentTablediv = tableDiv;
+      currentTableDiv = tableDiv;
     }
   }
-  currentTablediv.style.backgroundColor = "white";
+  currentTableDiv.style.backgroundColor = "white";
 }
 
 function closeTableSession() {
@@ -161,6 +290,7 @@ function closeTableSession() {
 
 function clearCurrentTable() {}
 
+// Clicking anywhere on the screen other than on the modal (when the modal is active) should hide the modal.
 window.onclick = function(event) {
   if (event.target == modalElement) {
     hideModal();

@@ -135,6 +135,40 @@ input:focus {
   color: #cacaca;
 }
 
+.modal-body {
+  --rows: 2;
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 1fr 2fr 0.5fr;
+  grid-template-rows: 2vw auto;
+  font-size: 1vw;
+  padding: 1vw;
+  width: 100%;
+}
+
+.modal-grid-header {
+  font-weight: bold;
+}
+
+.col-1 {
+  grid-column: 1 / 2;
+}
+
+.col-2 {
+  grid-column: 2 / 3;
+}
+
+.col-3 {
+  grid-column: 3 / 4;
+}
+
+.col-4 {
+  grid-column: 4 / 5;
+}
+
+.col-5 {
+  grid-column: 5 / 6;
+}
+
 .modal-footer {
   display: flex;
   flex-direction: row-reverse;
@@ -143,8 +177,10 @@ input:focus {
 .modal-footer__btn {
   background-color: white;
   border: none;
+  outline: none;
   padding: 1vw;
   font-family: "Roboto", sans-serif;
+  cursor: pointer;
 }
 
 .modal-footer__btn:hover {
