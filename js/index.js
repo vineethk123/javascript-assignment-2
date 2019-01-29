@@ -4,7 +4,7 @@ const tableContainerDiv = document.getElementById("all-tables-div");
 const tableDivs = tableContainerDiv.querySelectorAll("div");
 let modalElement = document.getElementsByClassName("modal")[0];
 let allTableOrders = {};
-let modalBodyElement = document.getElementById("modal-body");
+let modalBodyElement = document.getElementsByClassName("modal-body")[0];
 
 // Add event listeners related to dragging to table and item div elements
 for (const div of itemDivs) {
@@ -28,7 +28,7 @@ class Table {
    * Returns itemInformationList.
    */
   getItemInformationList() {
-    return this.itemInformationList.slice();
+    return this.itemInformationList;
   }
 
   /**
@@ -187,10 +187,15 @@ function renderTableContent(targetTableElement) {
   let itemCountSpanElement = targetTableElement.querySelector(
     "span[data-name='item-count']"
   );
-  priceSpanElement.innerText = allTableOrders[targetTableId].getTotalBill();
-  itemCountSpanElement.innerText = allTableOrders[
-    targetTableId
-  ].getAllItemCount();
+  if (allTableOrders[targetTableId]) {
+    priceSpanElement.innerText = allTableOrders[targetTableId].getTotalBill();
+    itemCountSpanElement.innerText = allTableOrders[
+      targetTableId
+    ].getAllItemCount();
+  } else {
+    priceSpanElement.innerText = 0;
+    itemCountSpanElement.innerText = 0;
+  }
 }
 
 /**
@@ -243,17 +248,54 @@ function showModal(tableId) {
  * @param {string} tableId
  */
 function populateModal(tableId) {
-  let serialNumber = 0;
-  for (let itemName in allTableOrders[tableId]) {
-    serialNumber++;
-    modalBodyElement.appendChild(createNode("span", serialNumber, ["col-1"]));
-    modalBodyElement.appendChild(createNode("span", itemName, ["col-2"]));
-    modalBodyElement.appendChild(
-      createNode("span", allTableOrders[tableId][item].price, ["col-3"])
+  if (allTableOrders[tableId]) {
+    let itemInformationListIterator = allTableOrders[tableId]
+      .getItemInformationList()
+      .entries();
+    for (let entry of itemInformationListIterator) {
+      let serialNumber = entry[0] + 1,
+        itemName = entry[1].name,
+        itemPrice = entry[1].price,
+        divContainer = createNode("div", "", {
+          class: "modal-body-row",
+          "data-serial-number": "" + serialNumber
+        });
+      divContainer.appendChild(
+        createNode("span", serialNumber, { class: "col-1 modal-row-element" })
+      );
+      divContainer.appendChild(
+        createNode("span", itemName, { class: "col-2 modal-row-element" })
+      );
+      divContainer.appendChild(
+        createNode("span", itemPrice, { class: "col-3 modal-row-element" })
+      );
+      divContainer.appendChild(
+        createNode("span", "placeholder", { class: "col-4 modal-row-element" })
+      );
+      let binSpanElement = createNode("span", "", {
+        class: "col-5 modal-row-element"
+      });
+      binSpanElement.onclick = function() {
+        deleteItem(tableId, itemName);
+      };
+      binSpanElement.appendChild(
+        createNode("img", "", {
+          class: "delete-icon",
+          src: "images/delete-icon.svg"
+        })
+      );
+      divContainer.appendChild(binSpanElement);
+      modalBodyElement.appendChild(divContainer);
+    }
+  } else {
+    let divContainer = createNode("div", "", {
+      class: "modal-body-row",
+      "data-serial-number": "0"
+    });
+    divContainer.appendChild(
+      createNode("span", "No Orders Yet!", { class: "no-orders-span" })
     );
-    modalBodyElement.appendChild(createNode("span", "placeholder", ["col-4"]));
-    let binSpanElement = createNode("span", "", ["col-5"]);
-    binSpanElement.appendChild(createNode("img", "", ["delete-icon"]));
+    modalBodyElement.appendChild(divContainer);
   }
 }
 
@@ -261,18 +303,38 @@ function populateModal(tableId) {
  * Create an HTML element with the specified innertext and CSS classes and return it.
  * @param {string} elementName
  * @param {string} innerText
- * @param {Array} classNames
+ * @param {Array} attributes
  */
-function createNode(elementName, innerText, classNames) {
-  // To-Do: create nodes.
+function createNode(elementName, innerText, attributes) {
+  let htmlElement = document.createElement(elementName);
+  if (elementName !== "img") {
+    htmlElement.innerText = innerText;
+  }
+  for (let [attribute, value] of Object.entries(attributes)) {
+    htmlElement.setAttribute(attribute, value);
+  }
+  if (innerText === "No Orders Yet!") {
+    htmlElement.classList.add("no-orders-row");
+  }
+  return htmlElement;
+}
+
+function deleteItem(tableId, itemName) {
+  let currentTableDiv = tableContainerDiv.querySelector("#" + tableId);
+  deleteAllItemsFromModal(tableId);
+  allTableOrders[tableId].deleteItemByName(itemName);
+  populateModal(tableId);
+  renderTableContent(currentTableDiv);
 }
 
 /**
  * Hide the modal and turn the clicked table div's background color to white
  */
 function hideModal() {
-  let currentTableDiv = null;
+  let currentTableDiv = null,
+    currentTableId;
   modalElement.style.display = "none";
+  // Find the table for which the modal is being displayed.
   let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
   for (let tableDiv of tableDivs) {
     let tableDivTitle = tableDiv.querySelector(".card-title").innerText;
@@ -281,10 +343,32 @@ function hideModal() {
     }
   }
   currentTableDiv.style.backgroundColor = "white";
+  // Remove all divs appended the modal.
+  currentTableId = currentTableDiv.getAttribute("id");
+  deleteAllItemsFromModal(currentTableId);
+}
+
+function deleteAllItemsFromModal(tableId) {
+  let allAppendedElements = modalBodyElement.querySelectorAll(
+    "div[data-serial-number]"
+  );
+  for (appendedElement of allAppendedElements) {
+    appendedElement.remove();
+  }
 }
 
 function closeTableSession() {
-  clearCurrentTable();
+  let currentTableDiv = null;
+  // Find the table for which the modal is being displayed.
+  let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
+  for (let tableDiv of tableDivs) {
+    let tableDivTitle = tableDiv.querySelector(".card-title").innerText;
+    if (tableDivTitle === tableName) {
+      currentTableDiv = tableDiv;
+    }
+  }
+  delete allTableOrders[currentTableDiv.getAttribute("id")];
+  renderTableContent(currentTableDiv);
   hideModal();
 }
 
