@@ -24,6 +24,7 @@ body {
 }
 
 .heading {
+  font-size: 1.2vw;
   align-self: center;
 }
 
@@ -87,6 +88,10 @@ body {
 
 #menu-search-bar {
   width: 51%;
+}
+
+input {
+  font-size: 1vw;
 }
 
 input:focus {
@@ -216,6 +221,8 @@ input:focus {
 }
 
 .delete-icon {
+  width: 2vw;
+  height: 2vw;
   cursor: pointer;
 }
 
