@@ -149,7 +149,7 @@ input:focus {
 .modal-body-row {
   display: flex;
   flex-flow: row nowrap;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-end;
   font-size: 1vw;
   padding: 0 1vw 1vw 1vw;

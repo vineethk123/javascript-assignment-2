@@ -91,7 +91,7 @@ class Table {
    * @param {string} itemName
    * @param {number} itemCount
    */
-  setItemCoutByName(itemName, itemCount) {
+  setItemCountByName(itemName, itemCount) {
     let itemIndex = this.getItemIndexByName(itemName);
     this.itemInformationList[itemIndex].count = itemCount;
   }
@@ -319,6 +319,7 @@ function populateModal(tableId) {
     }
     // If a table is occupied and has given some orders, show them the total.
     if (allTableOrders[tableId].getItemInformationList().length !== 0) {
+      showTotalOnModal(tableId);
     } else {
       // Prompt them to order something.
       let divContainer = createNode("div", "", {
@@ -366,6 +367,10 @@ function createNode(elementName, innerText, attributes) {
   return htmlElement;
 }
 
+/**
+ * Toggle the input border color and it's corresponding label's text color.
+ * @param {Object} inputEvent
+ */
 function toggleBorderAndLabelColor(inputEvent) {
   let inputElementId = inputEvent.srcElement.getAttribute("id");
   let labelElement = modalBodyElement.querySelector(
@@ -399,9 +404,10 @@ function updateItemCount(blurEvent) {
   );
   targetSpanElement = targetDivElement.querySelectorAll("span")[1];
   itemName = targetSpanElement.innerText;
-  allTableOrders[tableId].setItemCoutByName(itemName, newItemCount);
+  allTableOrders[tableId].setItemCountByName(itemName, newItemCount);
   toggleBorderAndLabelColor(blurEvent);
   renderTableContent(tableId);
+  updateTotalBillOnModal();
 }
 
 /**
@@ -428,6 +434,42 @@ function deleteItem(tableId, itemName) {
   allTableOrders[tableId].deleteItemByName(itemName);
   populateModal(tableId);
   renderTableContent(tableId);
+}
+
+/**
+ * Add the total bill to the modal.
+ * @param {string} tableId
+ */
+function showTotalOnModal(tableId) {
+  let divContainer = createNode("div", "", {
+      class: "modal-body-row",
+      "data-serial-number": "" + -3
+    }),
+    spanElement = createNode("span", "", {
+      class: "col-1 modal-row-element"
+    });
+  divContainer.appendChild(spanElement);
+  spanElement = createNode("span", "", { class: "col-2 modal-row-element" });
+  divContainer.appendChild(spanElement);
+  spanElement = createNode(
+    "span",
+    "Total: " + allTableOrders[tableId].getTotalBill(),
+    { id: "modal-total-bill", class: "col-3 modal-row-element" }
+  );
+  divContainer.appendChild(spanElement);
+  spanElement = createNode("span", "", { class: "col-4 modal-row-element" });
+  divContainer.appendChild(spanElement);
+  spanElement = createNode("span", "", { class: "col-5 modal-row-element" });
+  divContainer.appendChild(spanElement);
+  modalBodyElement.appendChild(divContainer);
+}
+
+/**
+ * Updates the total bill value on modal.
+ */
+function updateTotalBillOnModal() {
+  modalBodyElement.querySelector("#modal-total-bill").innerText =
+    "Total: " + allTableOrders[tableId].getTotalBill();
 }
 
 /**
@@ -471,8 +513,6 @@ function closeTableSession() {
   renderTableContent(currentTableId);
   hideModal();
 }
-
-function clearCurrentTable() {}
 
 // Clicking anywhere on the screen other than on the modal (when the modal is active) should hide the modal.
 window.onclick = function(event) {
