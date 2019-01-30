@@ -81,9 +81,19 @@ class Table {
    * Increment the count of an item named 'itemName'.
    * @param {string} itemName
    */
-  incrementItemCountByName(itemName) {
+  incrementItemCountByName(itemName, additionalItemCount) {
     let itemIndex = this.getItemIndexByName(itemName);
-    this.itemInformationList[itemIndex].count += 1;
+    this.itemInformationList[itemIndex].count += additionalItemCount;
+  }
+
+  /**
+   * Set the count of an item named 'itemName'.
+   * @param {string} itemName
+   * @param {number} itemCount
+   */
+  setItemCoutByName(itemName, itemCount) {
+    let itemIndex = this.getItemIndexByName(itemName);
+    this.itemInformationList[itemIndex].count = itemCount;
   }
 
   /**
@@ -169,9 +179,9 @@ function dragDrop(dragEvent) {
       1
     );
   } else {
-    allTableOrders[droppedTableId].incrementItemCountByName(draggedItemName);
+    allTableOrders[droppedTableId].incrementItemCountByName(draggedItemName, 1);
   }
-  renderTableContent(this);
+  renderTableContent(this.getAttribute("id"));
 }
 
 /**
@@ -179,8 +189,8 @@ function dragDrop(dragEvent) {
  * @param {object} targetTableElement
  * @param {object} dragEvent
  */
-function renderTableContent(targetTableElement) {
-  let targetTableId = targetTableElement.getAttribute("id");
+function renderTableContent(targetTableId) {
+  let targetTableElement = tableContainerDiv.querySelector("#" + targetTableId);
   let priceSpanElement = targetTableElement.querySelector(
     "span[data-name='price']"
   );
@@ -257,10 +267,15 @@ function populateModal(tableId) {
       let serialNumber = entry[0] + 1,
         itemName = entry[1].name,
         itemPrice = entry[1].price,
+        itemCount = entry[1].count,
+        inputElementId = "input-" + serialNumber,
         divContainer = createNode("div", "", {
           class: "modal-body-row",
           "data-serial-number": "" + serialNumber
-        });
+        }),
+        itemCountDiv = createNode("div", "", { class: "col-4 item-count-div" }),
+        labelElement = null,
+        inputElement = null;
       divContainer.appendChild(
         createNode("span", serialNumber, { class: "col-1 modal-row-element" })
       );
@@ -270,9 +285,23 @@ function populateModal(tableId) {
       divContainer.appendChild(
         createNode("span", itemPrice, { class: "col-3 modal-row-element" })
       );
-      divContainer.appendChild(
-        createNode("span", "placeholder", { class: "col-4 modal-row-element" })
-      );
+      labelElement = createNode("label", "Number of Servings", {
+        class: "modal-body-row__label",
+        for: "" + inputElementId
+      });
+      inputElement = createNode("input", "", {
+        id: "" + inputElementId,
+        class: "modal-body-row__input",
+        type: "number",
+        min: "1",
+        max: "20",
+        value: "" + itemCount
+      });
+      inputElement.addEventListener("focus", toggleBorderAndLabelColor);
+      inputElement.addEventListener("blur", updateItemCount);
+      itemCountDiv.appendChild(labelElement);
+      itemCountDiv.appendChild(inputElement);
+      divContainer.appendChild(itemCountDiv);
       let binSpanElement = createNode("span", "", {
         class: "col-5 modal-row-element"
       });
@@ -323,7 +352,9 @@ function populateModal(tableId) {
  */
 function createNode(elementName, innerText, attributes) {
   let htmlElement = document.createElement(elementName);
-  if (elementName !== "img") {
+  let selfClosingElements = ["img", "input"];
+  // Set innerText only for non self-closing element.
+  if (selfClosingElements.indexOf(elementName) === -1) {
     htmlElement.innerText = innerText;
   }
   for (let [attribute, value] of Object.entries(attributes)) {
@@ -335,12 +366,68 @@ function createNode(elementName, innerText, attributes) {
   return htmlElement;
 }
 
+function toggleBorderAndLabelColor(inputEvent) {
+  let inputElementId = inputEvent.srcElement.getAttribute("id");
+  let labelElement = modalBodyElement.querySelector(
+    "label[for='" + inputElementId + "']"
+  );
+  if (labelElement.className === "modal-body-row__label") {
+    labelElement.setAttribute("class", "modal-body-row__label--focus");
+  } else {
+    labelElement.setAttribute("class", "modal-body-row__label");
+  }
+}
+
+/**
+ * When the focus goes out of the inout element, fetch the count for that item and update it,
+ * both in memory and on screen.
+ * @param {Object} blurEvent
+ */
+function updateItemCount(blurEvent) {
+  let targetDivElement,
+    newItemCount,
+    inputElementId,
+    targetSpanElement,
+    itemName;
+  inputElementId = blurEvent.srcElement.getAttribute("id");
+  newItemCount = parseInt(
+    modalBodyElement.querySelector("#" + inputElementId).value
+  );
+  tableId = getCorrespodingTableIdForModal();
+  targetDivElement = modalBodyElement.querySelector(
+    "div[data-serial-number='" + inputElementId.slice(-1) + "']"
+  );
+  targetSpanElement = targetDivElement.querySelectorAll("span")[1];
+  itemName = targetSpanElement.innerText;
+  allTableOrders[tableId].setItemCoutByName(itemName, newItemCount);
+  toggleBorderAndLabelColor(blurEvent);
+  renderTableContent(tableId);
+}
+
+/**
+ * Return the table id for which the modal is being displayed.
+ */
+function getCorrespodingTableIdForModal() {
+  let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
+  for (let tableDiv of tableDivs) {
+    let tableDivTitle = tableDiv.querySelector(".card-title").innerText;
+    if (tableDivTitle === tableName) {
+      currentTableDiv = tableDiv;
+    }
+  }
+  return currentTableDiv.getAttribute("id");
+}
+
+/**
+ * Delete the item from the table orders and update the data on table div & modal
+ * @param {string} tableId
+ * @param {string} itemName
+ */
 function deleteItem(tableId, itemName) {
-  let currentTableDiv = tableContainerDiv.querySelector("#" + tableId);
   deleteAllItemsFromModal(tableId);
   allTableOrders[tableId].deleteItemByName(itemName);
   populateModal(tableId);
-  renderTableContent(currentTableDiv);
+  renderTableContent(tableId);
 }
 
 /**
@@ -351,13 +438,8 @@ function hideModal() {
     currentTableId;
   modalElement.style.display = "none";
   // Find the table for which the modal is being displayed.
-  let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
-  for (let tableDiv of tableDivs) {
-    let tableDivTitle = tableDiv.querySelector(".card-title").innerText;
-    if (tableDivTitle === tableName) {
-      currentTableDiv = tableDiv;
-    }
-  }
+  let currentTableDivId = getCorrespodingTableIdForModal();
+  currentTableDiv = tableContainerDiv.querySelector("#" + currentTableDivId);
   currentTableDiv.style.backgroundColor = "white";
   // Remove all divs appended the modal.
   currentTableId = currentTableDiv.getAttribute("id");
@@ -374,7 +456,8 @@ function deleteAllItemsFromModal(tableId) {
 }
 
 function closeTableSession() {
-  let currentTableDiv = null;
+  let currentTableDiv = null,
+    currentTableId;
   // Find the table for which the modal is being displayed.
   let tableName = modalElement.querySelector("#table-name-for-modal").innerText;
   for (let tableDiv of tableDivs) {
@@ -383,8 +466,9 @@ function closeTableSession() {
       currentTableDiv = tableDiv;
     }
   }
-  delete allTableOrders[currentTableDiv.getAttribute("id")];
-  renderTableContent(currentTableDiv);
+  currentTableId = currentTableDiv.getAttribute("id");
+  delete allTableOrders[currentTableId];
+  renderTableContent(currentTableId);
   hideModal();
 }
 
