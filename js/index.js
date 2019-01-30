@@ -244,10 +244,11 @@ function showModal(tableId) {
 }
 
 /**
- * Populate the modal with order information related to the table having id tableId.
+ * Populate the modal with order information related to the table with id tableId.
  * @param {string} tableId
  */
 function populateModal(tableId) {
+  // Check if the table has started giving orders
   if (allTableOrders[tableId]) {
     let itemInformationListIterator = allTableOrders[tableId]
       .getItemInformationList()
@@ -287,13 +288,28 @@ function populateModal(tableId) {
       divContainer.appendChild(binSpanElement);
       modalBodyElement.appendChild(divContainer);
     }
+    // If a table is occupied and has given some orders, show them the total.
+    if (allTableOrders[tableId].getItemInformationList().length !== 0) {
+    } else {
+      // Prompt them to order something.
+      let divContainer = createNode("div", "", {
+        class: "modal-body-row",
+        "data-serial-number": "-2"
+      });
+      divContainer.appendChild(
+        createNode("span", "Delicious food is waiting for you! Order Soon!", {
+          class: "no-orders-span"
+        })
+      );
+      modalBodyElement.appendChild(divContainer);
+    }
   } else {
     let divContainer = createNode("div", "", {
       class: "modal-body-row",
-      "data-serial-number": "0"
+      "data-serial-number": "-1"
     });
     divContainer.appendChild(
-      createNode("span", "No Orders Yet!", { class: "no-orders-span" })
+      createNode("span", "No one is at the table!", { class: "no-orders-span" })
     );
     modalBodyElement.appendChild(divContainer);
   }
